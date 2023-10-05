@@ -14,10 +14,12 @@ Functions are
 ##### -*- coding: utf-8 -*-
 
 import sys
+
 import os
+
 import re
 
-sys.path.append('PATH_TO/software/python_tools/')
+sys.path.append('PATH_TO/software/python_tools/') # path were your gff_tools.py file is located
 
 import gff_tools
 
