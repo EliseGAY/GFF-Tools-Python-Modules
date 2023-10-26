@@ -1,4 +1,4 @@
-# GFF-Fromat---Python-Modules
+# GFF-Fomat---Python-Modules
 Functions to play with GFF file 
 Used with Python 3.6
 
