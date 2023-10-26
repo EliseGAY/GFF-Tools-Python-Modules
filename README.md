@@ -1,15 +1,17 @@
-# GFF-Fomat---Python-Modules
-Functions to play with GFF file 
+##### GFF-Fomat---Python-Modules
+Functions to play with GFF file
+
 Used with Python 3.6
 
-# Python modules to play with GFF file
+##### Python modules to play with GFF file
 Functions are
+
 - Dict_Pos : Create a list of dictionnaries containing a sequence name associated to a position
 - Pos_to_GFF : localize SNP position in gff file to get genes in gff format containing the position
 - To be continue ..
 
   
-# Run modules on a ptyhon script :
+##### Run modules on a ptyhon script :
 '''
 ##### -*- coding: utf-8 -*-
 
