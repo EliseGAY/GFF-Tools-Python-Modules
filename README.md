@@ -7,7 +7,8 @@ Used with Python 3.6
 Functions are
 
 - Dict_Pos : Create a list of dictionnaries containing a sequence name associated to a position
-- Pos_to_GFF : localize SNP position in gff file to get genes in gff format containing the position
+- Pos_to_GFF : localize SNP position in gff file to get genes in gff format containing the position*
+- get_gene_in_intervall : Extract all gene include in one given region
 - To be continue ..
 
   
