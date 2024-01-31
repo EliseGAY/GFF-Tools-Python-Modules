@@ -16,6 +16,8 @@ Functions are
 '''
 ##### -*- coding: utf-8 -*-
 
+# Charge module 
+#---------------#
 import sys
 
 import os
@@ -26,12 +28,28 @@ sys.path.append('PATH_TO/software/python_tools/') # path were your gff_tools.py 
 
 import gff_tools
 
-##### example of one function used :
-
+##### Run Dict_Pos function :
+#-----------------------------------#
 get help :
 
 help(gff_tools.Dict_Pos)
 
 gff_tools.Dict_Pos("PATH_TO_YOUR_POS_FILE")
 
+# Run : get_gene_in_intervall
+#-----------------------------------#
+# get help
+help(get_gene_in_intervall)
+
+# Run the function
+list_dict_int=get_gene_in_intervall("/Users/elise/Desktop/head_GCF_016802725.1_UNIL_Sinv_3.0_genomic.gff", "gene", "NC_052664.1", 0, 300000)
+
+# write the result in a file
+filout=open("/Users/elise/Desktop/SELECT_GCF_016802725.1_UNIL_Sinv_3.0_genomic.gff",'w')
+for dictio in list_dict_int:
+    list_value=list(dictio.values())
+    list_join="\t".join(str(values) for values in list_value)
+    print(list_join)
+    filout.write(list_join)
+filout.close()
 '''
