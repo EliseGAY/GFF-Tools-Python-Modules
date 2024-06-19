@@ -9,6 +9,7 @@ Functions are
 - Dict_Pos : Create a list of dictionnaries containing a sequence name associated to a position
 - Pos_to_GFF : localize SNP position in gff file to get genes in gff format containing the position*
 - get_gene_in_interval : Extract all gene included in one given region
+- Get_CDS_coordinates (to harmonize in a function in module file, recovered from analyses)
 - To continue ..
 
   
