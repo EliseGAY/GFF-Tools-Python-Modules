@@ -10,6 +10,13 @@ Functions are
 - Pos_to_GFF : localize SNP position in gff file to get genes in gff format containing the position*
 - get_gene_in_interval : Extract all gene included in one given region
 - Get_CDS_coordinates (to harmonize in a function in module file, recovered from analyses)
+  ex :
+  
+  > with open("CDS.bed", 'w') as CDS_bed :
+  >  for CDS in list_dic_gene_total : 
+  >      CDS_line = ("{}\t{}\t{}\t{}\t{}\n").format(CDS["scaf"], CDS["CDS_start"], CDS["CDS_end"], CDS["gene_strand"], CDS["gene_id"])
+  >      CDS_bed.write(CDS_line)
+
 - To continue ..
 
   
