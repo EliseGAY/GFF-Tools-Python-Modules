@@ -180,3 +180,72 @@ def get_gene_in_intervall(gff, feature, sequence, start_inter, end_inter):
         if (dict_i["sequence"] == sequence and dict_i["feature"] == feature and int(start_inter)<=dict_i["end"] and int(end_inter)>=dict_i["start"]):
             list_selected_dict.append(dict_i)
     return list_selected_dict
+    
+    
+#-----------------------------------------------------------#
+# Extract CDS coordinates (without UTR)
+#-----------------------------------------------------------#
+    
+    def get_cds_coor(GFF_file):
+    '''
+    Usage
+    ------
+    Get CDS coordinates from a GFF file
+    Python verion 3.6
+
+    Arguments
+    ---------
+    - gff file with header 'Sequence / source / features / start / end / others' 
+     and has to be a tab separated file
+
+    command line
+    -------------
+    get_cds_coor(gff_file)
+
+    output : List of dictionnary containing CDS name / start / end / scaffold / strand 
+    --------
+    '''
+
+# Initialize variables :
+bed_filin = open(GFF_file, 'r')
+line_list_bed = bed_filin.readlines() 
+bed_filin.close()
+list_dic_gene_total = []
+dic_cds = {}
+CDS_line_index = 0
+
+    while CDS_line_index < len(line_list_bed)-1:
+        gene_line_split_actual = line_list_bed[CDS_line_index].split("\t")
+        gene_line_split_next = line_list_bed[CDS_line_index +1].split("\t")
+        if CDS_line_index == 0:
+            dic_cds["CDS_start"] =  gene_line_split_actual[1]
+            dic_cds["scaf"] =  gene_line_split_actual[0]
+            dic_cds["gene_id"] =  gene_line_split_actual[4]
+            dic_cds["gene_strand"] =  gene_line_split_actual[3]
+        
+        elif gene_line_split_actual[4] == gene_line_split_next[4] and CDS_line_index != 0:
+
+        elif gene_line_split_actual[4] != gene_line_split_next[4] and CDS_line_index != 0:
+            dic_cds["CDS_end"] =  gene_line_split_actual[2]
+            dic_cds["CDS_end"]
+            list_dic_gene_total.append(dic_cds)
+            dic_cds= {}
+            
+            dic_cds["scaf"] =  gene_line_split_next[0]
+            dic_cds["gene_id"] =  gene_line_split_next[4]
+            dic_cds["gene_strand"] =  gene_line_split_next[3]
+            dic_cds["CDS_start"] =  gene_line_split_next[1]
+        else :
+            print("particular case")
+    
+        CDS_line_index += 1
+
+    if CDS_line_index == len(line_list_bed)-1:
+        gene_line_split_actual = line_list_bed[CDS_line_index].split("\t")
+        dic_cds["CDS_end"] =  gene_line_split_actual[2]
+        list_dic_gene_total.append(dic_cds)
+        dic_cds= {}
+    else:
+        print("problem with index")
+    return list_dic_gene_total
+
