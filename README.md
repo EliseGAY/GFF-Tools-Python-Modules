@@ -12,7 +12,7 @@ Functions are
 - Get_CDS_coordinates (to harmonize in a function in module file, recovered from analyses)
   ex :
   
-  > with open("CDS.bed", 'w') as CDS_bed :
+  >     with open("CDS.bed", 'w') as CDS_bed :
   > 
   >  for CDS in list_dic_gene_total :
   > 
