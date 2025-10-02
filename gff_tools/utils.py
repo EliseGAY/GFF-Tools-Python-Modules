@@ -1,23 +1,140 @@
 """ Modules to play with gff files """
-'''
-Author : Elise GAY (please, ask author before sharing)
-Last update : 23/01/2024
-Goal : Functions to play with GFF file 
-Version : Used with Python 3.6
-'''
-
-#!/usr/local/bin/python
+# !/usr/local/bin/python
 # -*- coding: utf-8 -*-
-
+__all__ = ['Dict_GFF', 'Dict_Pos', 'Pos_to_GFF', 'get_gene_in_interval', 'Write_Bed']
 #------------------------#
 # Import modules
 #------------------------#
-import sys
+# import sys
 import re
+import os
 
-#-----------------------------------------------------------#
+# -----------------------------------------------------------#
+# Read GFF
+# -----------------------------------------------------------#
+
+def Dict_GFF(gff_file, gff_features):
+    '''
+    Usage
+    ------
+    Reads GFF file and store 'gene' (default features) information in dictionnary list
+    
+    Python verion 3.6
+
+    Arguments
+    ---------
+    
+    - absolute path to gff file
+    - features chosen to store (eg. CDS, gene, mRNA, exon)
+
+    command line
+    -------------
+    Dict_GFF(gff_file, gff_features)
+
+    output : 
+    --------
+    dictionnary with 
+    [features (gene : default, exon ,CDS, mRNA) , start (int), end(int), chr (str), ID (str) ]
+
+    Note : 
+    ------
+    Wandering what format should be your gff ? 
+    check out here :https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
+    
+    '''
+    results = []
+    with open(gff_file, 'r') as file:
+        for line in file:
+            if line.startswith('#') or not line.strip():
+                continue  # Skip comment or empty lines
+
+            fields = line.strip().split('\t')
+            if len(fields) != 9:
+                
+                raise ValueError(f"Wrong format at line {line_num}: Expected 9 fields, got {len(fields)}\nLine: {line.strip()}")
+                continue  # Not a valid GFF3 line
+
+            chrom, source, feature, start, end, score, strand, phase, attributes = fields # love that syntax
+
+            if feature not in gff_features:
+                continue
+
+            attr_dict = {}                      # yeah .. one day I'll use dictionnary comprehension
+            for item in attributes.split(';'):
+                if '=' in item:
+                    key, value = item.split('=', 1)
+                    attr_dict[key.strip()] = value.strip()
+
+            feature_id = attr_dict.get('ID', 'NA') # Search for ID and use default Na if doesnt find
+
+            results.append({
+                'feature': feature,
+                'start': int(start),
+                'end': int(end),
+                'chr': chrom,
+                'ID': feature_id
+            })
+            
+    return results
+
+# -----------------------------------------------------------#
+# create a bed file 
+# -----------------------------------------------------------#
+import os
+
+def Write_Bed(gff_file, gff_features, outdir=None):
+    '''
+    Usage
+    ------   
+    Write the chr-start-end-features in a bed file
+    
+    Python version 3.6
+
+    Arguments
+    ---------
+    - absolute path to gff file
+    - features chosen to store (eg. CDS, gene, mRNA, exon)
+
+    Command line
+    -------------
+    Write_Bed(gff_file, gff_features)
+
+    Output : 
+    --------
+    BED file outputted
+    
+    [features (gene : default, exon, CDS, mRNA), start (int), end (int), chr (str)]
+
+    Note : 
+    ------
+    Wondering what format your GFF should be? 
+    Check out: https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
+    '''
+
+    # Check if the GFF file exists
+    if not os.path.isfile(gff_file):
+        raise FileNotFoundError(f"The GFF file '{gff_file}' does not exist.")
+
+    if outdir is None:
+        outdir = os.getcwd()
+
+    # Create BED output file name
+    bedout_name = os.path.join(outdir, f"{gff_features}.bed")
+
+    # Prevent overwriting existing BED file
+    if os.path.exists(bedout_name):
+        raise FileExistsError(f"The file '{bedout_name}' already exists.")
+
+    # Process GFF and write to BED
+    list_dict = Dict_GFF(gff_file, gff_features)
+
+    with open(bedout_name, 'w') as bedout:
+        for dict_i in list_dict:
+            bedout.write(f"{dict_i['chr']}\t{dict_i['start']}\t{dict_i['end']}\t{dict_i['ID']}\n")
+
+# -----------------------------------------------------------#
 # Associate position with sequences (contig, chr, scaffold)
-#-----------------------------------------------------------#
+# -----------------------------------------------------------#
 
 def Dict_Pos(position_file):
     '''
@@ -50,9 +167,9 @@ def Dict_Pos(position_file):
         pos_dict = {}
     return list_dict
 
-#-----------------------------------------------------------#
+# -----------------------------------------------------------#
 # Extract gene containing SNP positions
-#-----------------------------------------------------------#
+# -----------------------------------------------------------#
 
 def Pos_to_GFF(gff, list_dict, features):  
     '''
@@ -94,11 +211,11 @@ def Pos_to_GFF(gff, list_dict, features):
     gff_in.close()
     return line_subset
 
-#-----------------------------------------------------------#
+# -----------------------------------------------------------#
 # Extract genes in specific region
-#-----------------------------------------------------------#
+# -----------------------------------------------------------#
 
-def get_gene_in_intervall(gff, feature, sequence, start_inter, end_inter):  
+def get_gene_in_interval(gff, feature, sequence, start_inter, end_inter):  
     '''
     Usage
     ------
@@ -141,7 +258,12 @@ def get_gene_in_intervall(gff, feature, sequence, start_inter, end_inter):
     return a list of dictionnaries containing gene infos
     See the example run to write dictionaries in output file
     '''
-    
+    # print variable to user check
+    print(gff)
+    print(feature)
+    print(sequence)
+    print(start_inter)
+    print(end_inter)
     # read gff
     gff_in=open(gff, 'r')
     # initiate variables
@@ -152,21 +274,25 @@ def get_gene_in_intervall(gff, feature, sequence, start_inter, end_inter):
     for line_gff in gff_in:
         list_gff=line_gff.split(sep="\t")
         # don't read uncorrect lines
-        if len(list_gff)<=6 or list_gff[2] == "region":
+        if "#" in line_gff:
             continue
-        else:
+        elif list_gff[2] == "region":
+            continue
+        # create dict only on the scaffold chosen
+        elif list_gff[0] == sequence and list_gff[2] == feature :
             # create one dict by gene
             dict_gene_i = {}
             
             # create the value for the "gene id" key
-            gene_ID=[x for x in list_gff[8].split(sep=";") if re.search("gene=",x)]
-            
+            gene_ID=[x for x in list_gff[8].split(sep=";") if re.search("ID=",x)]
+            gene_ID_str="".join(gene_ID).split("=")[1]
+
             # fill the dict by values
             list_gene_i=[["sequence", str(list_gff[0])], 
                     ["feature",str(list_gff[2])], 
                     ["start", int(list_gff[3])], 
                     ["end",int(list_gff[4])], 
-                    ["gene_ID",gene_ID]]
+                    ["gene_ID",gene_ID_str]]
                      
             dict_gene_i=dict(list_gene_i)
             
@@ -174,78 +300,9 @@ def get_gene_in_intervall(gff, feature, sequence, start_inter, end_inter):
             list_dict.append(dict_gene_i)
     # close the gff file            
     gff_in.close()
-    
+    print(len(list_dict))
     # get only the gene between min and max from the interval
     for dict_i in list_dict:
         if (dict_i["sequence"] == sequence and dict_i["feature"] == feature and int(start_inter)<=dict_i["end"] and int(end_inter)>=dict_i["start"]):
             list_selected_dict.append(dict_i)
     return list_selected_dict
-    
-    
-#-----------------------------------------------------------#
-# Extract CDS coordinates (without UTR)
-#-----------------------------------------------------------#
-    
-    def get_cds_coor(GFF_file):
-    '''
-    Usage
-    ------
-    Get CDS coordinates from a GFF file
-    Python verion 3.6
-
-    Arguments
-    ---------
-    - gff file with header 'Sequence / source / features / start / end / others' 
-     and has to be a tab separated file
-
-    command line
-    -------------
-    get_cds_coor(gff_file)
-
-    output : List of dictionnary containing CDS name / start / end / scaffold / strand 
-    --------
-    '''
-
-# Initialize variables :
-bed_filin = open(GFF_file, 'r')
-line_list_bed = bed_filin.readlines() 
-bed_filin.close()
-list_dic_gene_total = []
-dic_cds = {}
-CDS_line_index = 0
-
-    while CDS_line_index < len(line_list_bed)-1:
-        gene_line_split_actual = line_list_bed[CDS_line_index].split("\t")
-        gene_line_split_next = line_list_bed[CDS_line_index +1].split("\t")
-        if CDS_line_index == 0:
-            dic_cds["CDS_start"] =  gene_line_split_actual[1]
-            dic_cds["scaf"] =  gene_line_split_actual[0]
-            dic_cds["gene_id"] =  gene_line_split_actual[4]
-            dic_cds["gene_strand"] =  gene_line_split_actual[3]
-        
-        elif gene_line_split_actual[4] == gene_line_split_next[4] and CDS_line_index != 0:
-
-        elif gene_line_split_actual[4] != gene_line_split_next[4] and CDS_line_index != 0:
-            dic_cds["CDS_end"] =  gene_line_split_actual[2]
-            dic_cds["CDS_end"]
-            list_dic_gene_total.append(dic_cds)
-            dic_cds= {}
-            
-            dic_cds["scaf"] =  gene_line_split_next[0]
-            dic_cds["gene_id"] =  gene_line_split_next[4]
-            dic_cds["gene_strand"] =  gene_line_split_next[3]
-            dic_cds["CDS_start"] =  gene_line_split_next[1]
-        else :
-            print("particular case")
-    
-        CDS_line_index += 1
-
-    if CDS_line_index == len(line_list_bed)-1:
-        gene_line_split_actual = line_list_bed[CDS_line_index].split("\t")
-        dic_cds["CDS_end"] =  gene_line_split_actual[2]
-        list_dic_gene_total.append(dic_cds)
-        dic_cds= {}
-    else:
-        print("problem with index")
-    return list_dic_gene_total
-
